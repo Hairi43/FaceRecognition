@@ -20,7 +20,8 @@ class FaceAlignModelLoader(BaseModelLoader):
         
     def load_model(self):
         # setting device on GPU if available, else CPU
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device = torch.device('cpu')
         try:
             model = torch.load(self.cfg['model_file_path'], map_location=device, weights_only=False)
         except Exception as e:

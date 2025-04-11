@@ -62,8 +62,9 @@ class LiveFace:
         model_path = 'models'
 
         # setting device on GPU if available, else CPU
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # device = torch.device('cpu')
+        device ='cpu'
 
         # face detection model setting.
         scene = 'non-mask'
@@ -73,6 +74,7 @@ class LiveFace:
         try:
             faceDetModelLoader = FaceDetModelLoader(model_path, model_category, model_name)
             model, cfg = faceDetModelLoader.load_model()
+
             faceDetModelHandler = FaceDetModelHandler(model, device, cfg)
         except Exception as e:
             logger.error('Falied to load face detection Model.')
@@ -87,7 +89,9 @@ class LiveFace:
         logger.info('Start to load the face landmark model...')
         try:
             faceAlignModelLoader = FaceAlignModelLoader(model_path, model_category, model_name)
+
             model, cfg = faceAlignModelLoader.load_model()
+
             faceAlignModelHandler = FaceAlignModelHandler(model, device, cfg)
         except Exception as e:
             logger.error('Failed to load face landmark model.')
@@ -102,7 +106,11 @@ class LiveFace:
         logger.info('Start to load the face recognition model...')
         try:
             faceRecModelLoader = FaceRecModelLoader(model_path, model_category, model_name)
+
+
             model, cfg = faceRecModelLoader.load_model()
+            model = model.module.cpu() # added
+
             faceRecModelHandler = FaceRecModelHandler(model, device, cfg)
         except Exception as e:
             logger.error('Failed to load face recognition model.')
@@ -279,8 +287,10 @@ class LiveFace:
         model_path = 'models'
 
         # setting device on GPU if available, else CPU
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # device = torch.device('cpu')
+
+        device ='cpu'
 
         # face detection model setting.
         scene = 'non-mask'
@@ -320,6 +330,7 @@ class LiveFace:
         try:
             faceRecModelLoader = FaceRecModelLoader(model_path, model_category, model_name)
             model, cfg = faceRecModelLoader.load_model()
+            model = model.module.cpu() # added
             faceRecModelHandler = FaceRecModelHandler(model, device, cfg)
         except Exception as e:
             logger.error('Failed to load face recognition model.')
