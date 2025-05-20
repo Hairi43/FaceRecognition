@@ -43,6 +43,7 @@ class VideoApp:
         self.faceDet = tk.BooleanVar()
         self.faceLand = tk.BooleanVar()
         self.gamma_corr = tk.DoubleVar()
+        self.clahe = tk.BooleanVar()
 
         config_frame = ttk.Frame(root)
         config_frame.grid(row=3, column=0, sticky="nw", padx=20)
@@ -53,14 +54,17 @@ class VideoApp:
         c1 = ttk.Checkbutton(config_frame, text='Kadrowanie', variable=self.crop, onvalue=True, offvalue=False)
         c2 = ttk.Checkbutton(config_frame, text='Obrys twarzy', variable=self.faceDet, onvalue=True, offvalue=False)
         c3 = ttk.Checkbutton(config_frame, text='Cechy twarzy', variable=self.faceLand, onvalue=True, offvalue=False)
+        c5 = ttk.Checkbutton(config_frame, text='CLAHE', variable=self.clahe, onvalue=True, offvalue=False)
         passw_label = tk.Label(config_frame, text = 'Korekcja gamma, [0.0, 1.0]')
         c4 = ttk.Entry(config_frame, text='Korekcja gamma', textvariable=self.gamma_corr)
 
         c1.pack(anchor='w')
         c2.pack(anchor='w')
         c3.pack(anchor='w')
+        c5.pack(anchor='w')
         passw_label.pack(anchor='w')
         c4.pack(anchor='w')
+        
 
 
         self.record_btn = ttk.Button(root, text="Rozpocznij nagrywanie", command=self.start_recording)
@@ -73,8 +77,8 @@ class VideoApp:
         self.cap = None
         self.recording = False
         self.picture = False
-        self.output_file = "recordingsDB/output.mp4"
-        self.img_output_file = "imagesDB/output.jpg"
+        self.output_file = "recordingsDB/new_output.mp4"
+        self.img_output_file = "imagesDB/new_output.jpg"
 
     def choose_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Pliki wideo", "*.mp4 *.avi *.mov")])
@@ -82,7 +86,7 @@ class VideoApp:
             self.video_source = file_path
             # uruchomienie rozpoznawania twarzy
             live_face = LiveFace(self.video_source, draw_crop=self.crop.get(), draw_face=self.faceDet.get(),
-                                  draw_landmarks=self.faceLand.get(), gamma_corr=self.gamma_corr.get())
+                                  draw_landmarks=self.faceLand.get(), gamma_corr=self.gamma_corr.get(), clahe=self.clahe)
             live_face.run()
 
 
@@ -148,9 +152,10 @@ class VideoApp:
 
             if self.crop.get():
                 frame_lines = self.draw_lines(frame)
-
+                cv2.imshow('Nagrywanie', frame_lines)
+            else:
+                cv2.imshow('Nagrywanie', frame)
             out.write(frame)
-            cv2.imshow('Nagrywanie', frame_lines)
 
         cam.release()
         out.release()
@@ -200,7 +205,7 @@ class VideoApp:
         # live_face = LiveFace(self.video_source)
         # live_face.run()
         live_face = LiveFace(self.video_source, draw_crop=self.crop.get(), draw_face=self.faceDet.get(),
-                                  draw_landmarks=self.faceLand.get(), gamma_corr=self.gamma_corr.get())
+                                  draw_landmarks=self.faceLand.get(), gamma_corr=self.gamma_corr.get(), clahe=self.clahe)
         live_face.run_live()
 
 

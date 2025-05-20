@@ -45,13 +45,14 @@ with open('config/model_conf.yaml') as f:
 
 class LiveFace:
 
-    def __init__(self, video_source=None, draw_crop=False, draw_face=False, draw_landmarks=False, gamma_corr=0.0, level_of_acceptance=0.70):
+    def __init__(self, video_source=None, draw_crop=False, draw_face=False, draw_landmarks=False, gamma_corr=0.0, level_of_acceptance=0.70, clahe=False):
         self.source = video_source
         self.draw_crop = draw_crop
         self.draw_face = draw_face
         self.draw_landmarks = draw_landmarks
         self.gamma_corr = gamma_corr
         self.level_of_acceptance = level_of_acceptance
+        self.clahe = clahe
 
     def draw_rectangle_on_face(self, dets, frame):
             box = dets[0]
@@ -98,20 +99,27 @@ class LiveFace:
     #     return frame
 
 
-    def show_score(self, score, frame):
+    def show_score(self, score, possible_face_image, frame):
         font = cv2.FONT_HERSHEY_SIMPLEX
         org = (00, 200)
+        org_2 = (00, 30)
         fontScale = 1
         color_red = (0, 0, 255)
         color_green = (0, 255, 0)
         thickness = 2
 
+        filename = Path(possible_face_image).name
+
         if score > self.level_of_acceptance:
-            frame = cv2.putText(frame, str(score), org, font, fontScale, 
+            frame = cv2.putText(frame, f"{score:.5f}", org, font, fontScale, 
                                 color_green, thickness, cv2.LINE_AA, False)
+            frame = cv2.putText(frame, f"{filename}", org_2, font, fontScale, 
+                                (0,255,255), thickness, cv2.LINE_AA, False)
         else:
-            frame = cv2.putText(frame, str(score), org, font, fontScale, 
+            frame = cv2.putText(frame, f"{score:.5f}", org, font, fontScale, 
                                 color_red, thickness, cv2.LINE_AA, False)
+            frame = cv2.putText(frame, f"{filename}", org_2, font, fontScale, 
+                                (0,255,255), thickness, cv2.LINE_AA, False)
         return frame
     
 
@@ -221,6 +229,18 @@ class LiveFace:
                 if not ret:
                     break
 
+                #print(f"frame shape original {frame.shape}")
+
+                if self.clahe:
+                    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+                    lab_planes = list(cv2.split(lab))
+                    clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(8,8))
+                    lab_planes[0] = clahe.apply(lab_planes[0])
+                    lab = cv2.merge(lab_planes)
+                    frame = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+
+                    #print(f"frame shape after {frame.shape}")
+
                 # if self.draw_crop:
                 #     frame = self.draw_lines(frame)
 
@@ -236,7 +256,7 @@ class LiveFace:
                         try:
                             dets = faceDetModelHandler.inference_on_image(frame)
                             dets = numpy.append(dets, faceDetModelHandler.inference_on_image(cv2.imread(image)))
-
+                            print(dets.shape)
 
                             if dets.shape[0] == 10:
                                 dets = dets.reshape(2, 5)
@@ -356,7 +376,7 @@ class LiveFace:
                 #     frame = cv2.putText(frame, str(score), org, font, fontScale, 
                 #                         color_red, thickness, cv2.LINE_AA, False)
 
-                frame_draw = self.show_score(score, frame_draw)
+                frame_draw = self.show_score(score, possible_face_image, frame_draw)
                     
                 cv2.imshow('video', frame_draw)
 
@@ -489,6 +509,14 @@ class LiveFace:
                 if not ret:
                     break
 
+                if self.clahe:
+                    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+                    lab_planes = list(cv2.split(lab))
+                    clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(8,8))
+                    lab_planes[0] = clahe.apply(lab_planes[0])
+                    lab = cv2.merge(lab_planes)
+                    frame = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+
                 # if self.draw_crop:
                 #     frame = self.draw_lines(frame)
 
@@ -618,7 +646,7 @@ class LiveFace:
                     # cv2.imshow('Camera', frame)
 
 
-                frame_draw = self.show_score(score, frame_draw)
+                frame_draw = self.show_score(score, possible_face_image,frame_draw)
 
                 cv2.imshow('video', frame_draw)
 
