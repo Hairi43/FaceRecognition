@@ -86,7 +86,8 @@ class VideoApp:
             self.video_source = file_path
             # uruchomienie rozpoznawania twarzy
             live_face = LiveFace(self.video_source, draw_crop=self.crop.get(), draw_face=self.faceDet.get(),
-                                  draw_landmarks=self.faceLand.get(), gamma_corr=self.gamma_corr.get(), clahe=self.clahe)
+                                  draw_landmarks=self.faceLand.get(), gamma_corr=self.gamma_corr.get(),
+                                    clahe=self.clahe.get(), on_no_face_detected=self.show_face_warning)
             live_face.run()
 
 
@@ -198,14 +199,17 @@ class VideoApp:
         cv2.destroyAllWindows()
         self.picture = False
 
-    
+    def show_face_warning(self):
+        messagebox.showwarning("Brak twarzy", "Nie wykryto twarzy na obrazie.")
+
     def live_video(self):
         # if self.video_source == 0:
         #     return
         # live_face = LiveFace(self.video_source)
         # live_face.run()
         live_face = LiveFace(self.video_source, draw_crop=self.crop.get(), draw_face=self.faceDet.get(),
-                                  draw_landmarks=self.faceLand.get(), gamma_corr=self.gamma_corr.get(), clahe=self.clahe)
+                                  draw_landmarks=self.faceLand.get(), gamma_corr=self.gamma_corr.get(),
+                                    clahe=self.clahe.get(), on_no_face_detected=self.show_face_warning)
         live_face.run_live()
 
 

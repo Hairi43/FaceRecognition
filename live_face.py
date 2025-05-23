@@ -45,7 +45,7 @@ with open('config/model_conf.yaml') as f:
 
 class LiveFace:
 
-    def __init__(self, video_source=None, draw_crop=False, draw_face=False, draw_landmarks=False, gamma_corr=0.0, level_of_acceptance=0.70, clahe=False):
+    def __init__(self, video_source=None, draw_crop=False, draw_face=False, draw_landmarks=False, gamma_corr=0.0, level_of_acceptance=0.70, clahe=False, on_no_face_detected=None):
         self.source = video_source
         self.draw_crop = draw_crop
         self.draw_face = draw_face
@@ -53,6 +53,7 @@ class LiveFace:
         self.gamma_corr = gamma_corr
         self.level_of_acceptance = level_of_acceptance
         self.clahe = clahe
+        self.on_no_face_detected = on_no_face_detected
 
     def draw_rectangle_on_face(self, dets, frame):
             box = dets[0]
@@ -222,7 +223,7 @@ class LiveFace:
         folder_dir = 'imagesDB'
         images = Path(folder_dir).glob('*.jpg')
 
-        with open("scoresDB/new_score.txt", 'a') as f:
+        with open("scoresDB/new_score.txt", 'w') as f:
             while video.isOpened():
                 ret, frame = video.read()
 
@@ -230,6 +231,8 @@ class LiveFace:
                     break
 
                 #print(f"frame shape original {frame.shape}")
+
+                print(f"self.clahe = {self.clahe}")
 
                 if self.clahe:
                     lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
@@ -306,9 +309,9 @@ class LiveFace:
                         else:
                             logger.info('Success!')
                     checked_all_faces = True
-                else:
+                elif possible_face_image != '':
                     print("currently processing best image", possible_face_image)
-                    print("gamma level", self.gamma_correction)
+                    # print("gamma level", self.gamma_correction)
                     try:
                         dets = faceDetModelHandler.inference_on_image(frame)
                         dets = numpy.append(dets, faceDetModelHandler.inference_on_image(cv2.imread(possible_face_image)))
@@ -320,6 +323,13 @@ class LiveFace:
                     except Exception as e:
                             logger.error('Face detection failed!')
                             logger.error(e)
+                            font = cv2.FONT_HERSHEY_SIMPLEX
+                            org = (00, 60)
+                            fontScale = 1
+                            color = (255, 255, 0)
+                            thickness = 2
+                            frame = cv2.putText(frame, f"nie znaleziono twarzy", org, font, fontScale, 
+                                                color, thickness, cv2.LINE_AA, False)
 
 
                     # frame rate - 10 fps - prawie...
@@ -358,6 +368,10 @@ class LiveFace:
                         sys.exit(-1)
                     else:
                         logger.info('Success!')
+                else:
+                    if self.on_no_face_detected:
+                        self.on_no_face_detected()
+                    break
 
                     # measurment_counter += 1
 
@@ -379,7 +393,7 @@ class LiveFace:
                 frame_draw = self.show_score(score, possible_face_image, frame_draw)
                     
                 cv2.imshow('video', frame_draw)
-
+                
                 # Press 'q' to exit the loop
                 if cv2.waitKey(1) == ord('q'):
                     break
@@ -502,7 +516,7 @@ class LiveFace:
         # avg_score = 0
         # measurment_counter = 0
 
-        with open("scoresDB/new_score.txt", 'a') as f:
+        with open("scoresDB/new_score.txt", 'w') as f:
             while True:
                 ret, frame = cam.read()
 
@@ -542,6 +556,14 @@ class LiveFace:
                         except Exception as e:
                                 logger.error('Face detection failed!')
                                 logger.error(e)
+
+                                font = cv2.FONT_HERSHEY_SIMPLEX
+                                org = (00, 60)
+                                fontScale = 1
+                                color = (255, 255, 0)
+                                thickness = 2
+                                frame = cv2.putText(frame, f"nie znaleziono twarzy", org, font, fontScale, 
+                                                    color, thickness, cv2.LINE_AA, False)
 
 
                         # frame rate - 10 fps - prawie...
@@ -583,7 +605,7 @@ class LiveFace:
                         else:
                             logger.info('Success!')
                     checked_all_faces = True
-                else:
+                elif possible_face_image != '':
                     print("currently processing best image", possible_face_image)
                     try:
                         dets = faceDetModelHandler.inference_on_image(frame)
@@ -598,6 +620,14 @@ class LiveFace:
                     except Exception as e:
                             logger.error('Face detection failed!')
                             logger.error(e)
+
+                            font = cv2.FONT_HERSHEY_SIMPLEX
+                            org = (00, 60)
+                            fontScale = 1
+                            color = (255, 255, 0)
+                            thickness = 2
+                            frame = cv2.putText(frame, f"nie znaleziono twarzy", org, font, fontScale, 
+                                                color, thickness, cv2.LINE_AA, False)
 
 
                     # frame rate - 10 fps - prawie...
@@ -637,8 +667,11 @@ class LiveFace:
                         sys.exit(-1)
                     else:
                         logger.info('Success!')
-
-                    # measurment_counter += 1
+                else:
+                    if self.on_no_face_detected:
+                        self.on_no_face_detected()
+                    break
+                        # measurment_counter += 1
                     # Write the frame to the output file
                     # out.write(frame)
 
